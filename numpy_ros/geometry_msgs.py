@@ -9,9 +9,10 @@ from numpy_ros.conversions import converts_to_numpy, converts_to_message, to_num
 try:
     from geometry_msgs.msg import (
         Accel, AccelStamped, AccelWithCovariance, AccelWithCovarianceStamped,
-        Inertia, InertiaStamped, Point, Point32, PointStamped, Twist, 
-        TwistStamped, TwistWithCovariance, TwistWithCovarianceStamped, Vector3,
-        Vector3Stamped,  Wrench, WrenchStamped
+        Inertia, InertiaStamped, Point, Point32, PointStamped, Polygon, 
+        PolygonStamped, Twist, TwistStamped, TwistWithCovariance, 
+        TwistWithCovarianceStamped, Vector3, Vector3Stamped,  Wrench, 
+        WrenchStamped
     )
 
 except ImportError:
@@ -24,6 +25,7 @@ _stamped_type_to_attr = {
     AccelWithCovarianceStamped: 'accel',
     InertiaStamped: 'inertia',
     PointStamped: 'point',
+    PolygonStamped: 'polygon',
     TwistStamped: 'twist',
     TwistWithCovarianceStamped: 'twist',
     Vector3Stamped: 'vector',
@@ -233,3 +235,36 @@ def numpy_to_inertia(message_type, mass, mass_center, inertia_tensor):
         iyz = inertia_tensor[2, 1],
         izz = inertia_tensor[2, 2]
     )
+
+
+@converts_to_numpy(Polygon, PointStamped)
+def polygon_to_numpy(message, homogeneous=False):
+    
+    message = _unstamp(message)
+
+    points = np.array(
+        [vector_to_numpy(p, homogeneous=homogeneous) for p in message.points], 
+        dtype=np.float32
+    )
+
+    return points.T
+
+
+@converts_to_message(Polygon)
+def numpy_to_polygon(message_type, points):
+
+    _assert_is_castable(points, np.float32)
+
+    if points.ndim != 2 or len(points) not in (3, 4):
+        raise ValueError(
+            (f'Expected matrix of shape (3, *) or (4, *), received '
+             f'{points.shape}.')
+        )
+
+    points_msg = []
+
+    for point in np.hsplit(points, points.shape[1]):
+        point_msg = numpy_to_vector(Point32, point.squeeze())
+        points_msg.append(point_msg)
+
+    return message_type(points_msg)
