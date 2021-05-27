@@ -9,9 +9,9 @@ from numpy_ros.conversions import converts_to_numpy, converts_to_message, to_num
 try:
     from geometry_msgs.msg import (
         Accel, AccelStamped, AccelWithCovariance, AccelWithCovarianceStamped,
-        Point, Point32, PointStamped, Twist, TwistStamped, TwistWithCovariance,
-        TwistWithCovarianceStamped, Vector3, Vector3Stamped,  Wrench, 
-        WrenchStamped
+        Inertia, InertiaStamped, Point, Point32, PointStamped, Twist, 
+        TwistStamped, TwistWithCovariance, TwistWithCovarianceStamped, Vector3,
+        Vector3Stamped,  Wrench, WrenchStamped
     )
 
 except ImportError:
@@ -22,6 +22,7 @@ except ImportError:
 _stamped_type_to_attr = {
     AccelStamped: 'accel',
     AccelWithCovarianceStamped: 'accel',
+    InertiaStamped: 'inertia',
     PointStamped: 'point',
     TwistStamped: 'twist',
     TwistWithCovarianceStamped: 'twist',
@@ -190,3 +191,45 @@ def numpy_to_covariance(array):
         )
 
     return tuple(array.flatten())
+
+
+@converts_to_numpy(Inertia, InertiaStamped)
+def inertia_to_numpy(message, homogeneous=False):
+    
+    message = _unstamp(message)
+
+    mass = message.m
+    mass_center = vector_to_numpy(message.com, homogeneous=homogeneous)
+    inertia_tensor = np.array([
+        [message.ixx, message.ixy, message.ixz],
+        [message.ixy, message.iyy, message.iyz],
+        [message.ixz, message.iyz, message.izz],
+    ])
+
+    return mass, mass_center, inertia_tensor
+
+
+@converts_to_message(Inertia)
+def numpy_to_inertia(message_type, mass, mass_center, inertia_tensor):
+
+    _assert_is_castable(mass, np.float64)
+    _assert_is_castable(inertia_tensor, np.float64)
+    
+    mass_center_message = numpy_to_vector(Vector3, mass_center)
+
+    if inertia_tensor.shape != (3, 3):
+        raise ValueError(
+            (f'Expected inertia tensor of shape (6,6), received '
+             f'{inertia_tensor.shape}.')
+        )
+
+    return message_type(
+        m = float(mass),
+        com = mass_center_message,
+        ixx = inertia_tensor[0, 0],
+        ixy = inertia_tensor[0, 1],
+        ixz = inertia_tensor[0, 2],
+        iyy = inertia_tensor[1, 1],
+        iyz = inertia_tensor[2, 1],
+        izz = inertia_tensor[2, 2]
+    )
