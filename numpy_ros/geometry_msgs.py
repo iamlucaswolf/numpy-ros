@@ -16,8 +16,9 @@ try:
     from geometry_msgs.msg import (
         Accel, AccelStamped, AccelWithCovariance, AccelWithCovarianceStamped,
         Inertia, InertiaStamped, Point, Point32, PointStamped, Polygon, 
-        PolygonStamped, Quaternion, QuaternionStamped, Twist, TwistStamped, 
-        TwistWithCovariance, TwistWithCovarianceStamped, Vector3, 
+        PolygonStamped, Pose, PoseStamped, Quaternion, QuaternionStamped, 
+        Transform, TransformStamped, Twist, 
+        TwistStamped, TwistWithCovariance, TwistWithCovarianceStamped, Vector3, 
         Vector3Stamped, Wrench, WrenchStamped,
     )
 
@@ -32,7 +33,9 @@ _stamped_type_to_attr = {
     InertiaStamped: 'inertia',
     PointStamped: 'point',
     PolygonStamped: 'polygon',
+    PoseStamped: 'pose',
     QuaternionStamped: 'quaternion',
+    TransformStamped: 'transform',
     TwistStamped: 'twist',
     TwistWithCovarianceStamped: 'twist',
     Vector3Stamped: 'vector',
@@ -298,3 +301,71 @@ def numpy_to_quaternion(message_type, numpy_obj):
         )
 
     return message_type(*(float(x) for x in numpy_obj))
+
+
+@converts_to_numpy(Pose, PoseStamped, Transform, TransformStamped)
+def frame_to_numpy(message, homogeneous=False):
+
+    message = _unstamp(message)
+
+    is_pose = isinstance(message, Pose)
+
+    position_message = message.position if is_pose else message.translation
+    rotation_message = message.orientation if is_pose else message.rotation
+
+    position = vector_to_numpy(position_message, homogeneous=homogeneous)
+    rotation = quaternion_to_numpy(rotation_message)
+
+    if homogeneous:
+        as_matrix = np.eye(4, dtype=np.float64)
+
+        as_matrix[:, 3] = position
+        as_matrix[:3, :3] = quaternion.as_rotation_matrix(rotation)
+
+        return as_matrix
+
+    return position, rotation
+
+
+@converts_to_message(Pose, PoseStamped, Transform, TransformStamped)
+def numpy_to_frame(message_type, *args):
+
+    is_pose = message_type is Pose
+
+    position_key = 'position' if is_pose else 'translation'
+    rotation_key = 'orientation' if is_pose else 'rotation'
+
+    if len(args) == 1:
+
+        matrix = args[0]
+
+        _assert_is_castable(matrix, Pose)
+
+        if not matrix.shape == (4,4):
+            raise ValueError(
+                (f'Expected homogeneous matrix of shape (4,4), received '
+                 f'{matrix.shape}.')
+            )
+
+        if not matrix[3, :] == np.array([0.0, 0.0, 0.0, 1.0]):
+            raise ValueError(f'{matrix} is not a homogeneous matrix.')
+
+        position = matrix[3, :]
+        rotation = quaternion.from_rotation_matrix(matrix[:3, :3])
+
+    elif len(args) == 2:
+        position, rotation = args
+
+    else:
+        raise ValueError(
+            (f'Expected either position (np.ndarray of length 3 or 4) and '
+             f'rotation (np.quaternion) or homogeneous transform'
+             f'(4x4 np.ndarray), received {args}.')
+        )
+
+    kwargs = {
+        position_key: numpy_to_vector(position),
+        rotation_key: numpy_to_quaternion(rotation)
+    }
+
+    return message_type(**kwargs)
