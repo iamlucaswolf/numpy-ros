@@ -17,7 +17,7 @@ try:
     from geometry_msgs.msg import (
         Accel, AccelStamped, AccelWithCovariance, AccelWithCovarianceStamped,
         Inertia, InertiaStamped, Point, Point32, PointStamped, Polygon, 
-        PolygonStamped, Pose, PoseStamped, PoseWithCovariance, PoseWithCovarianceStamped, Quaternion, QuaternionStamped, 
+        PolygonStamped, Pose, PoseArray, PoseStamped, PoseWithCovariance, PoseWithCovarianceStamped, Quaternion, QuaternionStamped, 
         Transform, TransformStamped, Twist, 
         TwistStamped, TwistWithCovariance, TwistWithCovarianceStamped, Vector3, 
         Vector3Stamped, Wrench, WrenchStamped,
@@ -395,3 +395,33 @@ def numpy_to_kinematics_with_covariance(message_type, pose, covariance):
     )
 
     return message_type(pose=pose_message, covariance=covariance_message)
+
+
+@converts_to_numpy(PoseArray)
+def pose_array_to_numpy(message, as_array=False):
+
+    result = [frame_to_numpy(pose) for pose in message.poses]
+
+    if as_array:
+        result = np.stack(result, axis=0)
+
+    return result
+
+
+@converts_to_message(PoseArray)
+def numpy_to_pose_array(message_type, numpy_obj):
+
+    if isinstance(numpy_obj, np.ndarray):
+
+        if numpy_obj.ndim != 3 or numpy_obj.shape[1:] not in (3,4):
+            raise ValueError(
+                (f'Expected array of shape (*, 3, 3) or (*, 4, 4), received '
+                 f'{numpy_obj.shape}')
+            )
+
+        split = np.split(numpy_obj, len(numpy_obj), axis=0)
+        numpy_obj = (item.squeeze() for item in split)
+
+    poses = tuple(numpy_to_frame(Pose, item) for item in numpy_obj)
+
+    return message_type(poses=poses)
