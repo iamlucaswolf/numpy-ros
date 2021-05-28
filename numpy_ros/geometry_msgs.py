@@ -2,6 +2,7 @@
 
 """Conversion handlers for the ROS geometry_msgs package."""
 
+import collections
 import warnings
 
 import numpy as np
@@ -16,7 +17,7 @@ try:
     from geometry_msgs.msg import (
         Accel, AccelStamped, AccelWithCovariance, AccelWithCovarianceStamped,
         Inertia, InertiaStamped, Point, Point32, PointStamped, Polygon, 
-        PolygonStamped, Pose, PoseStamped, Quaternion, QuaternionStamped, 
+        PolygonStamped, Pose, PoseStamped, PoseWithCovariance, PoseWithCovarianceStamped, Quaternion, QuaternionStamped, 
         Transform, TransformStamped, Twist, 
         TwistStamped, TwistWithCovariance, TwistWithCovarianceStamped, Vector3, 
         Vector3Stamped, Wrench, WrenchStamped,
@@ -34,6 +35,7 @@ _stamped_type_to_attr = {
     PointStamped: 'point',
     PolygonStamped: 'polygon',
     PoseStamped: 'pose',
+    PoseWithCovariance: 'pose',
     QuaternionStamped: 'quaternion',
     TransformStamped: 'transform',
     TwistStamped: 'twist',
@@ -369,3 +371,27 @@ def numpy_to_frame(message_type, *args):
     }
 
     return message_type(**kwargs)
+
+
+@converts_to_numpy(PoseWithCovariance, PoseWithCovarianceStamped)
+def kinematics_with_covariance_to_numpy(message, homogeneous=False):
+    
+    message = _unstamp(message)
+
+    pose = frame_to_numpy(message.pose)
+    covariance = np.array(message.covariance, dtype=np.float64).reshape(6, 6)
+
+    return pose, covariance
+
+
+@converts_to_message(PoseWithCovariance)
+def numpy_to_kinematics_with_covariance(message_type, pose, covariance):
+
+    covariance_message = numpy_to_covariance(covariance)
+
+    pose_message = numpy_to_frame(
+        message_type, 
+        *pose if isinstance(pose, collections.Sequence) else pose
+    )
+
+    return message_type(pose=pose_message, covariance=covariance_message)
