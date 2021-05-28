@@ -2,8 +2,13 @@
 
 """Conversion handlers for the ROS geometry_msgs package."""
 
+import warnings
+
 import numpy as np
-import quaternion
+
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore')
+    import quaternion
 
 from numpy_ros.conversions import converts_to_numpy, converts_to_message, to_numpy
 
@@ -239,7 +244,7 @@ def numpy_to_inertia(message_type, mass, mass_center, inertia_tensor):
     )
 
 
-@converts_to_numpy(Polygon, PointStamped)
+@converts_to_numpy(Polygon, PolygonStamped)
 def polygon_to_numpy(message, homogeneous=False):
     
     message = _unstamp(message)

@@ -1,11 +1,24 @@
 # coding: utf-8
 
-import pytest
+import warnings
 
+import pytest
 import numpy as np
 from geometry_msgs.msg import *
 
+with warnings.catch_warnings():
+    warnings.simplefilter('ignore')
+    import quaternion
+
 from numpy_ros import to_numpy, to_message
+
+def test_quaternion_to_numpy():
+    message = Quaternion(x=1.0, y=0.0, z=0.0, w=0.0)
+    as_array = to_numpy(message)
+
+    assert as_array.dtype == np.quaternion
+    assert as_array == np.quaternion(1.0, 0.0, 0.0, 0.0)
+
 
 def test_numpy_to_vector():
     array = np.array([1.0, 2.0, 3.0])
@@ -42,8 +55,6 @@ def test_numpy_to_vector_invalid_dtype():
 
     with pytest.raises(TypeError):
         to_message(Point32, array)
-
-
 
 # TODO find a more efficient way to test this
 
