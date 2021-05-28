@@ -8,6 +8,7 @@ license = "MIT"
 [tool.poetry.dependencies]
 python = "^3.9"
 numpy = "^1.20.3"
+numpy-quaternion = "^2021.4.5"
 
 [tool.poetry.dev-dependencies]
 vermin = "^1.2.0"

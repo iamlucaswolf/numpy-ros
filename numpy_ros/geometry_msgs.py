@@ -3,6 +3,7 @@
 """Conversion handlers for the ROS geometry_msgs package."""
 
 import numpy as np
+import quaternion
 
 from numpy_ros.conversions import converts_to_numpy, converts_to_message, to_numpy
 
@@ -10,9 +11,9 @@ try:
     from geometry_msgs.msg import (
         Accel, AccelStamped, AccelWithCovariance, AccelWithCovarianceStamped,
         Inertia, InertiaStamped, Point, Point32, PointStamped, Polygon, 
-        PolygonStamped, Twist, TwistStamped, TwistWithCovariance, 
-        TwistWithCovarianceStamped, Vector3, Vector3Stamped,  Wrench, 
-        WrenchStamped
+        PolygonStamped, Quaternion, QuaternionStamped, Twist, TwistStamped, 
+        TwistWithCovariance, TwistWithCovarianceStamped, Vector3, 
+        Vector3Stamped, Wrench, WrenchStamped,
     )
 
 except ImportError:
@@ -26,6 +27,7 @@ _stamped_type_to_attr = {
     InertiaStamped: 'inertia',
     PointStamped: 'point',
     PolygonStamped: 'polygon',
+    QuaternionStamped: 'quaternion',
     TwistStamped: 'twist',
     TwistWithCovarianceStamped: 'twist',
     Vector3Stamped: 'vector',
@@ -268,3 +270,26 @@ def numpy_to_polygon(message_type, points):
         points_msg.append(point_msg)
 
     return message_type(points_msg)
+
+
+@converts_to_numpy(Quaternion, QuaternionStamped)
+def quaternion_to_numpy(message):
+    
+    message = _unstamp(message)
+    return np.quaternion(message.x, message.y, message.z, message.w)
+
+
+@converts_to_message(Quaternion)
+def numpy_to_quaternion(message_type, numpy_obj):
+
+    if isinstance(numpy_obj, quaternion.quaternion):
+        return message_type(*quaternion.as_float_array(numpy_obj))
+
+    _assert_is_castable(numpy_obj, np.float64)
+
+    if numpy_obj.shape != (4,):
+        raise ValueError(
+            f'Expected array of shape (4,), received {numpy_obj.shape}.'
+        )
+
+    return message_type(*(float(x) for x in numpy_obj))
