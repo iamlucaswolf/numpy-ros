@@ -11,6 +11,8 @@ import numpy as np
 _to_numpy = {}
 _to_message = {}
 
+# TODO Synthesize docstring to contain individual conversion info
+
 def to_numpy(message: Message, *args, **kwargs):
     """Converts a ROS message into a NumPy representation."""
 
@@ -18,7 +20,7 @@ def to_numpy(message: Message, *args, **kwargs):
 
     if not convert:
         raise TypeError(
-            (f'Cannot convert unknown message type {message.__class__}. To '
+            (f'Cannot convert unknown message type {message.__class__}. '
              f'To register a custom conversion function, see the '
              f'`converts_to_numpy` decorator')
         )

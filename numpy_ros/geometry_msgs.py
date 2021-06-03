@@ -378,18 +378,18 @@ def numpy_to_frame(message_type, *args):
 
 
 @converts_to_numpy(PoseWithCovariance, PoseWithCovarianceStamped)
-def kinematics_with_covariance_to_numpy(message, homogeneous=False):
+def frame_with_covariance_to_numpy(message, homogeneous=False):
     
     message = _unstamp(message)
 
-    pose = frame_to_numpy(message.pose)
+    pose = frame_to_numpy(message.pose, homogeneous=homogeneous)
     covariance = np.array(message.covariance, dtype=np.float64).reshape(6, 6)
 
     return pose, covariance
 
 
 @converts_to_message(PoseWithCovariance)
-def numpy_to_kinematics_with_covariance(message_type, pose, covariance):
+def numpy_to_frame_with_covariance(message_type, pose, covariance):
 
     covariance_message = numpy_to_covariance(covariance)
 
