@@ -1,9 +1,13 @@
-# coding: utf-8
+# -*- coding: utf-8 -*-
+
+"""Functions for registring and dispatching conversion handlers."""
+
 
 from genpy.message import Message
 import numpy as np
 
-# Maps ROS message types to conversion functions
+# Maps ROS message types (i.e. types inheriting from genpy.message.Message) 
+# to handlers that convert 
 _to_numpy = {}
 _to_message = {}
 
@@ -43,6 +47,10 @@ def converts_to_numpy(*args):
     def decorator(function):
 
         for message_type in args:
+
+            if not issubclass(message_type, Message):
+                raise TypeError()
+
             _to_numpy[message_type] = function
         
         return function
@@ -56,6 +64,10 @@ def converts_to_message(*args):
     def decorator(function):
 
         for message_type in args:
+
+            if not issubclass(message_type, Message):
+                raise TypeError()
+
             _to_message[message_type] = function
         
         return function

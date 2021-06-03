@@ -7,11 +7,13 @@ import warnings
 
 import numpy as np
 
+# numpy-quaternion warns if numba or scipy are not installed. We add these as
+# extra dependencies to the project.
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
     import quaternion
 
-from numpy_ros.conversions import converts_to_numpy, converts_to_message, to_numpy
+from numpy_ros.conversions import converts_to_numpy, converts_to_message, to_message, to_numpy
 
 try:
     from geometry_msgs.msg import (
@@ -56,13 +58,23 @@ def _unstamp(message):
 
 
 def _assert_is_castable(array, dtype):
-    """Checks that every element of the array can be converted to the desired
-    dtype, without loss of precision."""
+    """Raises a TypeError if `array` cannot be converted to `dtype` without
+    loss of precision."""
 
     min_dtype = np.min_scalar_type(array)
 
     if not np.can_cast(min_dtype, dtype):
         raise TypeError(f'Cannot safely cast array {array} to dtype {dtype}.')
+
+
+def _assert_has_shape(array, *shapes):
+    """Raises a ValueError if `array` cannot be reshaped into any of `shapes`."""
+
+    # Assumes that shapes are tuples and sequences of shapes are lists
+    if array.shape not in shapes:
+        raise ValueError(
+            f'Expected array of shape(s): {shapes}, received {array.shape}.'
+        )
 
 
 @converts_to_numpy(Vector3, Vector3Stamped, Point, PointStamped, Point32)
@@ -86,12 +98,9 @@ def vector_to_numpy(message, homogeneous=False):
 def numpy_to_vector(message_type, array):
     """Converts a 3d vector representation to a ROS message"""
 
-    if array.shape not in ((3,), (4,)):
-        raise ValueError(
-            f'Expected array of shape (3,) or (4,), received {array.shape}.'
-        )
-
     dtype = np.float32 if message_type is Point32 else np.float64
+
+    _assert_has_shape(array, (3,), (4,))
     _assert_is_castable(array, dtype)
     
     if len(array) == 4 and not np.isclose(array[3], 1.0):
@@ -135,8 +144,8 @@ def numpy_to_kinamatics(message_type, linear, angular):
     angular_key = 'torque' if is_wrench else 'angular'
 
     kwargs = {
-        linear_key: numpy_to_vector(linear),
-        angular_key: numpy_to_vector(angular)
+        linear_key: to_message(Vector3, linear),
+        angular_key: to_message(Vector3, angular)
     }
 
     return message_type(**kwargs)
@@ -197,12 +206,7 @@ def numpy_to_kinematics_with_covariance(
 def numpy_to_covariance(array):
 
     _assert_is_castable(array, np.float64)
-
-    if array.shape != (6,6):
-        raise ValueError(
-            (f'Expected covariance matrix of shape (6,6), received '
-             f'{array.shape}.')
-        )
+    _assert_has_shape(array, (6,6))
 
     return tuple(array.flatten())
 
