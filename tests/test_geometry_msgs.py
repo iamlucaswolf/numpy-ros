@@ -14,46 +14,71 @@ with warnings.catch_warnings():
 from numpy_ros import to_numpy, to_message
 
 
-@pytest.fixture()
+@pytest.fixture
 def vector():
     return np.array([1.0, 2.0, 3.0])
 
 
-@pytest.fixture()
+@pytest.fixture
+def vector_hom():
+    return np.array([1.0, 2.0, 3.0, 1.0])
+
+
+@pytest.fixture
 def covariance():
     return np.arange(36, dtype=np.float64).reshape(6, 6)
 
 
-@pytest.fixture()
+@pytest.fixture
 def inertia_tensor():
     return np.array([[1.0, 2.0, 3.0], [2.0, 4.0, 5.0], [3.0, 5.0, 6.0]])
 
-@pytest.fixture()
+@pytest.fixture
 def vector3_msg():
     return Vector3(1.0, 2.0, 3.0)
 
 
-@pytest.fixture()
+@pytest.fixture
+def vector3_stamped_msg(vector3_msg):
+    return Vector3Stamped(vector=vector3_msg)
+
+
+@pytest.fixture
+def point_msg():
+    return Point(1.0, 2.0, 3.0)
+
+
+@pytest.fixture
+def point32_msg():
+    return Point32(1.0, 2.0, 3.0)
+
+
+@pytest.fixture
+def point_stamped_msg(point_msg):
+    return PointStamped(point=point_msg)
+
+
+@pytest.fixture
 def accel_msg(vector3_msg):
     return Accel(vector3_msg, vector3_msg)
 
 
-@pytest.fixture()
+@pytest.fixture
 def accel_stamped_msg(accel_msg):
     return AccelStamped(accel=accel_msg)
 
 
-@pytest.fixture()
+@pytest.fixture
 def twist_msg(vector3_msg):
     return Twist(vector3_msg, vector3_msg)
 
 
-@pytest.fixture()
+@pytest.fixture
 def twist_stamped_msg(twist_msg):
     return TwistStamped(twist=twist_msg)
 
 
-@pytest.fixture()
+@pytest.fixture
 def wrench_msg(vector3_msg):
     return Wrench(vector3_msg, vector3_msg)
 
@@ -87,6 +112,11 @@ def twist_with_covariance_stamped_msg(twist_with_covariance_msg):
 def inertia_msg(vector3_msg):
     return Inertia(m=0.0, com=vector3_msg, ixx=1.0, ixy=2.0, ixz=3.0, iyy=4.0,
         iyz=5.0, izz=6.0)
+
+
+@pytest.fixture
+def inertia_stamped_msg(inertia_msg):
+    return InertiaStamped(inertia_msg)
 
 
 def array_equal(array, other):
@@ -225,6 +255,29 @@ def test_numpy_to_twist_with_covariance(vector, twist_msg, covariance):
     assert array_equal(np.array(message.covariance).reshape(6,6), covariance)
 
 
+##
+## Inertia, InertiaStamped
+##
+
+def test_inertia_to_numpy(inertia_msg, vector, inertia_tensor):
+    mass, mass_center, inertia_tensor_ = to_numpy(inertia_msg)
+
+    assert mass == 0.0 and isinstance(mass, float)
+    assert array_equal(mass_center, vector)
+    assert array_equal(inertia_tensor_, inertia_tensor)
+
+
+def test_inertia_to_numpy_hom(inertia_msg, vector_hom, inertia_tensor):
+    mass, mass_center, inertia_tensor_ = to_numpy(inertia_msg, homogeneous=True)
+
+    assert mass == 0.0 and isinstance(mass, float)
+    assert array_equal(mass_center, vector_hom)
+    assert array_equal(inertia_tensor_, inertia_tensor)
+    
+
+##
+## Quaternion
+##
 
 def test_quaternion_to_numpy():
     message = Quaternion(x=1.0, y=0.0, z=0.0, w=0.0)
@@ -234,18 +287,21 @@ def test_quaternion_to_numpy():
     assert as_array == np.quaternion(1.0, 0.0, 0.0, 0.0)
 
 
-def test_numpy_to_vector():
-    array = np.array([1.0, 2.0, 3.0])
-    as_message = to_message(Vector3, array)
-
-    assert as_message == Vector3(1.0, 2.0, 3.0)
+##
+## Vector3, Vector3Stamped
+##
 
 
-def test_numpy_to_vector_hom():
-    array = np.array([1.0, 2.0, 3.0, 1.0])
-    as_message = to_message(Vector3, array)
+def test_numpy_to_vector(vector, vector3_msg):
+    as_message = to_message(Vector3, vector)
 
-    assert as_message == Vector3(1.0, 2.0, 3.0)
+    assert as_message == vector3_msg
+
+
+def test_numpy_to_vector_hom(vector_hom, vector3_msg):
+    as_message = to_message(Vector3, vector_hom)
+
+    assert as_message == vector3_msg
 
 
 def test_numpy_to_vector_hom_invalid():
@@ -270,83 +326,58 @@ def test_numpy_to_vector_invalid_dtype():
     with pytest.raises(TypeError):
         to_message(Point32, array)
 
-# TODO find a more efficient way to test this
 
-def test_vector3_to_numpy():
-    message = Vector3(1.0, 2.0, 3.0)
-    as_array = to_numpy(message)
+def test_vector3_to_numpy(vector3_msg, vector):
+    as_array = to_numpy(vector3_msg)
 
-    assert np.all(as_array == np.array([1.0, 2.0, 3.0]))
+    assert np.all(as_array == np.array(vector))
     assert as_array.dtype == np.float64
 
 
-def test_vector3_to_numpy_hom():
-    message = Vector3(1.0, 2.0, 3.0)
-    as_array = to_numpy(message, homogeneous=True)
-
-    assert np.all(as_array == np.array([1.0, 2.0, 3.0, 1.0]))
-    assert as_array.dtype == np.float64
+def test_vector3_to_numpy_hom(vector3_msg, vector_hom):
+    as_array = to_numpy(vector3_msg, homogeneous=True)
+    assert array_equal(as_array, vector_hom)
 
 
-def test_vector3stamped_to_numpy():
-    message = Vector3Stamped(vector=Vector3(1.0, 2.0, 3.0))
-    as_array = to_numpy(message)
-
-    assert np.all(as_array == np.array([1.0, 2.0, 3.0]))
-    assert as_array.dtype == np.float64
+def test_vector3stamped_to_numpy(vector3_stamped_msg, vector):
+    as_array = to_numpy(vector3_stamped_msg)
+    assert array_equal(as_array, vector)
 
 
-def test_vector3stamped_to_numpy_hom():
-    message = Vector3Stamped(vector=Vector3(1.0, 2.0, 3.0))
-    as_array = to_numpy(message, homogeneous=True)
-
-    assert np.all(as_array == np.array([1.0, 2.0, 3.0, 1.0]))
-    assert as_array.dtype == np.float64
+def test_vector3stamped_to_numpy_hom(vector3_stamped_msg, vector_hom):
+    as_array = to_numpy(vector3_stamped_msg, homogeneous=True)
+    assert array_equal(as_array, vector_hom)
 
 
-def test_point_to_numpy():
-    message = Point(1.0, 2.0, 3.0)
-    as_array = to_numpy(message)
-
-    assert np.all(as_array == np.array([1.0, 2.0, 3.0]))
-    assert as_array.dtype == np.float64
+def test_point_to_numpy(point_msg, vector):
+    as_array = to_numpy(point_msg)
+    assert array_equal(as_array, vector)
 
 
-def test_point_to_numpy_hom():
-    message = Point(1.0, 2.0, 3.0)
-    as_array = to_numpy(message, homogeneous=True)
-
-    assert np.all(as_array == np.array([1.0, 2.0, 3.0, 1.0]))
-    assert as_array.dtype == np.float64
+def test_point_to_numpy_hom(point_msg, vector_hom):
+    as_array = to_numpy(point_msg, homogeneous=True)
+    assert array_equal(as_array, vector_hom)
 
 
-def test_pointstamped_to_numpy():
-    message = PointStamped(point=Point(1.0, 2.0, 3.0))
-    as_array = to_numpy(message)
-
-    assert np.all(as_array == np.array([1.0, 2.0, 3.0]))
-    assert as_array.dtype == np.float64
+def test_pointstamped_to_numpy(point_stamped_msg, vector):
+    as_array = to_numpy(point_stamped_msg)
+    assert array_equal(as_array, vector)
 
 
-def test_pointstamped_to_numpy_hom():
-    message = PointStamped(point=Point(1.0, 2.0, 3.0))
-    as_array = to_numpy(message, homogeneous=True)
-
-    assert np.all(as_array == np.array([1.0, 2.0, 3.0, 1.0]))
-    assert as_array.dtype == np.float64
+def test_pointstamped_to_numpy_hom(point_stamped_msg, vector_hom):
+    as_array = to_numpy(point_stamped_msg, homogeneous=True)
+    assert array_equal(as_array, vector_hom)
 
 
-def test_point32_to_numpy():
-    message = Point32(1.0, 2.0, 3.0)
-    as_array = to_numpy(message)
+def test_point32_to_numpy(point32_msg, vector):
+    as_array = to_numpy(point32_msg)
 
-    assert np.all(as_array == np.array([1.0, 2.0, 3.0]))
+    assert np.all(as_array == vector)
     assert as_array.dtype == np.float32
 
 
-def test_point32_to_numpy_hom():
-    message = Point32(1.0, 2.0, 3.0)
-    as_array = to_numpy(message, homogeneous=True)
+def test_point32_to_numpy_hom(point32_msg, vector_hom):
+    as_array = to_numpy(point32_msg, homogeneous=True)
 
-    assert np.all(as_array == np.array([1.0, 2.0, 3.0, 1.0]))
+    assert np.all(as_array == vector_hom)
     assert as_array.dtype == np.float32
