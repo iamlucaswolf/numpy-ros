@@ -1,4 +1,4 @@
-# coding: utf-8
+# -*- coding: utf-8 -*-
 
 """Conversion handlers for the ROS geometry_msgs package."""
 
@@ -13,16 +13,19 @@ with warnings.catch_warnings():
     warnings.simplefilter('ignore')
     import quaternion
 
-from numpy_ros.conversions import converts_to_numpy, converts_to_message, to_message, to_numpy
+from numpy_ros.conversions import (
+    converts_to_numpy, converts_to_message, to_message, to_numpy
+)
 
 try:
     from geometry_msgs.msg import (
         Accel, AccelStamped, AccelWithCovariance, AccelWithCovarianceStamped,
-        Inertia, InertiaStamped, Point, Point32, PointStamped, Polygon, 
-        PolygonStamped, Pose, PoseArray, PoseStamped, PoseWithCovariance, PoseWithCovarianceStamped, Quaternion, QuaternionStamped, 
-        Transform, TransformStamped, Twist, 
-        TwistStamped, TwistWithCovariance, TwistWithCovarianceStamped, Vector3, 
-        Vector3Stamped, Wrench, WrenchStamped,
+        Inertia, InertiaStamped, Point, Point32, PointStamped, Polygon,
+        PolygonStamped, Pose, PoseArray, PoseStamped, PoseWithCovariance,
+        PoseWithCovarianceStamped, Quaternion, QuaternionStamped, Transform,
+        TransformStamped, Twist, TwistStamped, TwistWithCovariance,
+        TwistWithCovarianceStamped, Vector3, Vector3Stamped, Wrench,
+        WrenchStamped,
     )
 
 except ImportError:
@@ -50,7 +53,7 @@ _stamped_type_to_attr = {
 def _unstamp(message):
     """Unstamps a given message."""
     attr_name = _stamped_type_to_attr.get(message.__class__)
-    
+
     if attr_name:
         message = getattr(message, attr_name)
 
@@ -68,7 +71,8 @@ def _assert_is_castable(array, dtype):
 
 
 def _assert_has_shape(array, *shapes):
-    """Raises a ValueError if `array` cannot be reshaped into any of `shapes`."""
+    """Raises a ValueError if `array` cannot be reshaped into any of
+    `shapes`."""
 
     # Assumes that shapes are tuples and sequences of shapes are lists
     if array.shape not in shapes:
@@ -102,7 +106,7 @@ def numpy_to_vector(message_type, array):
 
     _assert_has_shape(array, (3,), (4,))
     _assert_is_castable(array, dtype)
-    
+
     if len(array) == 4 and not np.isclose(array[3], 1.0):
         raise ValueError(
             (f'Input array has four components, but last component is '
@@ -113,11 +117,11 @@ def numpy_to_vector(message_type, array):
 
 
 @converts_to_numpy(
-    Accel, 
-    AccelStamped, 
-    Twist, 
-    TwistStamped, 
-    Wrench, 
+    Accel,
+    AccelStamped,
+    Twist,
+    TwistStamped,
+    Wrench,
     WrenchStamped
 )
 def kinematics_to_numpy(message, homogeneous=False):
@@ -158,14 +162,14 @@ def numpy_to_kinamatics(message_type, linear, angular):
     TwistWithCovarianceStamped,
 )
 def kinematics_with_covariance_to_numpy(message, homogeneous=False):
-    
+
     message = _unstamp(message)
 
     is_accel = isinstance(message, AccelWithCovariance)
     kinematics_message = message.accel if is_accel else message.twist
 
     linear, angular = kinematics_to_numpy(
-        kinematics_message, 
+        kinematics_message,
         homogeneous=homogeneous
     )
 
@@ -176,19 +180,18 @@ def kinematics_with_covariance_to_numpy(message, homogeneous=False):
 
 @converts_to_message(AccelWithCovariance, TwistWithCovariance)
 def numpy_to_kinematics_with_covariance(
-    message_type, 
-    linear, 
-    angular, 
-    covariance
-    ):
+        message_type,
+        linear,
+        angular,
+        covariance):
 
     is_accel = message_type is AccelWithCovariance
-    
+
     kinematics_key = 'accel' if is_accel else 'twist'
     kinematics_message_type = Accel if is_accel else Twist
 
     kinematics_message = numpy_to_kinamatics(
-        kinematics_message_type, 
+        kinematics_message_type,
         linear,
         angular
     )
@@ -206,14 +209,14 @@ def numpy_to_kinematics_with_covariance(
 def numpy_to_covariance(array):
 
     _assert_is_castable(array, np.float64)
-    _assert_has_shape(array, (6,6))
+    _assert_has_shape(array, (6, 6))
 
     return tuple(array.flatten())
 
 
 @converts_to_numpy(Inertia, InertiaStamped)
 def inertia_to_numpy(message, homogeneous=False):
-    
+
     message = _unstamp(message)
 
     mass = message.m
@@ -232,7 +235,7 @@ def numpy_to_inertia(message_type, mass, mass_center, inertia_tensor):
 
     _assert_is_castable(mass, np.float64)
     _assert_is_castable(inertia_tensor, np.float64)
-    
+
     mass_center_message = numpy_to_vector(Vector3, mass_center)
 
     if inertia_tensor.shape != (3, 3):
@@ -242,24 +245,24 @@ def numpy_to_inertia(message_type, mass, mass_center, inertia_tensor):
         )
 
     return message_type(
-        m = float(mass),
-        com = mass_center_message,
-        ixx = inertia_tensor[0, 0],
-        ixy = inertia_tensor[0, 1],
-        ixz = inertia_tensor[0, 2],
-        iyy = inertia_tensor[1, 1],
-        iyz = inertia_tensor[2, 1],
-        izz = inertia_tensor[2, 2]
+        m=float(mass),
+        com=mass_center_message,
+        ixx=inertia_tensor[0, 0],
+        ixy=inertia_tensor[0, 1],
+        ixz=inertia_tensor[0, 2],
+        iyy=inertia_tensor[1, 1],
+        iyz=inertia_tensor[2, 1],
+        izz=inertia_tensor[2, 2]
     )
 
 
 @converts_to_numpy(Polygon, PolygonStamped)
 def polygon_to_numpy(message, homogeneous=False):
-    
+
     message = _unstamp(message)
 
     points = np.array(
-        [vector_to_numpy(p, homogeneous=homogeneous) for p in message.points], 
+        [vector_to_numpy(p, homogeneous=homogeneous) for p in message.points],
         dtype=np.float32
     )
 
@@ -288,7 +291,7 @@ def numpy_to_polygon(message_type, points):
 
 @converts_to_numpy(Quaternion, QuaternionStamped)
 def quaternion_to_numpy(message):
-    
+
     message = _unstamp(message)
     return np.quaternion(message.x, message.y, message.z, message.w)
 
@@ -346,12 +349,7 @@ def numpy_to_frame(message_type, *args):
         matrix = args[0]
 
         _assert_is_castable(matrix, Pose)
-
-        if not matrix.shape == (4,4):
-            raise ValueError(
-                (f'Expected homogeneous matrix of shape (4,4), received '
-                 f'{matrix.shape}.')
-            )
+        _assert_has_shape(matrix, (4, 4))
 
         if not matrix[3, :] == np.array([0.0, 0.0, 0.0, 1.0]):
             raise ValueError(f'{matrix} is not a homogeneous matrix.')
@@ -379,7 +377,7 @@ def numpy_to_frame(message_type, *args):
 
 @converts_to_numpy(PoseWithCovariance, PoseWithCovarianceStamped)
 def frame_with_covariance_to_numpy(message, homogeneous=False):
-    
+
     message = _unstamp(message)
 
     pose = frame_to_numpy(message.pose, homogeneous=homogeneous)
@@ -394,7 +392,7 @@ def numpy_to_frame_with_covariance(message_type, pose, covariance):
     covariance_message = numpy_to_covariance(covariance)
 
     pose_message = numpy_to_frame(
-        message_type, 
+        message_type,
         *pose if isinstance(pose, collections.Sequence) else pose
     )
 
@@ -417,7 +415,7 @@ def numpy_to_pose_array(message_type, numpy_obj):
 
     if isinstance(numpy_obj, np.ndarray):
 
-        if numpy_obj.ndim != 3 or numpy_obj.shape[1:] not in (3,4):
+        if numpy_obj.ndim != 3 or numpy_obj.shape[1:] not in (3, 4):
             raise ValueError(
                 (f'Expected array of shape (*, 3, 3) or (*, 4, 4), received '
                  f'{numpy_obj.shape}')

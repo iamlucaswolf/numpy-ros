@@ -1,6 +1,5 @@
 # coding: utf-8
 
-from numpy_ros.geometry_msgs import vector_to_numpy
 import warnings
 
 import pytest
@@ -32,6 +31,7 @@ def covariance():
 @pytest.fixture
 def inertia_tensor():
     return np.array([[1.0, 2.0, 3.0], [2.0, 4.0, 5.0], [3.0, 5.0, 6.0]])
+
 
 @pytest.fixture
 def vector3_msg():
@@ -110,8 +110,16 @@ def twist_with_covariance_stamped_msg(twist_with_covariance_msg):
 
 @pytest.fixture
 def inertia_msg(vector3_msg):
-    return Inertia(m=0.0, com=vector3_msg, ixx=1.0, ixy=2.0, ixz=3.0, iyy=4.0,
-        iyz=5.0, izz=6.0)
+    return Inertia(
+        m=0.0,
+        com=vector3_msg,
+        ixx=1.0,
+        ixy=2.0,
+        ixz=3.0,
+        iyy=4.0,
+        iyz=5.0,
+        izz=6.0,
+    )
 
 
 @pytest.fixture
@@ -122,9 +130,8 @@ def inertia_stamped_msg(inertia_msg):
 def array_equal(array, other):
     return np.array_equal(array, other) and array.dtype == other.dtype
 
-##
-## Accel, AccelStamped
-##
+
+# Accel, AccelStamped
 
 def test_accel_to_numpy(accel_msg, vector):
     linear, angular = to_numpy(accel_msg)
@@ -141,16 +148,16 @@ def test_numpy_to_accel(vector, vector3_msg):
     message = to_message(Accel, vector, vector)
 
     assert isinstance(message, Accel)
-    
+
     assert isinstance(message.linear, Vector3)
     assert message.linear == vector3_msg
-    
+
     assert isinstance(message.angular, Vector3)
     assert message.angular == vector3_msg
 
-##
-## Twist, TwistStamped
-##
+
+# Twist, TwistStamped
+
 
 def test_twist_to_numpy(twist_msg, vector):
     linear, angular = to_numpy(twist_msg)
@@ -167,17 +174,15 @@ def test_numpy_to_twist(vector, vector3_msg):
     message = to_message(Twist, vector, vector)
 
     assert isinstance(message, Twist)
-    
+
     assert isinstance(message.linear, Vector3)
     assert message.linear == vector3_msg
-    
+
     assert isinstance(message.angular, Vector3)
     assert message.angular == vector3_msg
 
 
-##
-## Wrench, WrenchStamped
-##
+# Wrench, WrenchStamped
 
 
 def test_wrench_to_numpy(wrench_msg, vector):
@@ -195,17 +200,16 @@ def test_numpy_to_wrench(vector, vector3_msg):
     message = to_message(Wrench, vector, vector)
 
     assert isinstance(message, Wrench)
-    
+
     assert isinstance(message.force, Vector3)
     assert message.force == vector3_msg
-    
+
     assert isinstance(message.torque, Vector3)
     assert message.torque == vector3_msg
 
 
-##
-## AccelWithCovariance, AccelWithCovarianceStamped
-##
+# AccelWithCovariance, AccelWithCovarianceStamped
+
 
 def test_accel_with_covariance_to_numpy(accel_with_covariance_msg, covariance):
     linear, _, covariance_ = to_numpy(accel_with_covariance_msg)
@@ -214,8 +218,15 @@ def test_accel_with_covariance_to_numpy(accel_with_covariance_msg, covariance):
     assert array_equal(covariance, covariance_)
 
 
-def test_accel_with_covariance_stamped_to_numpy(accel_with_covariance_stamped_msg, covariance):
-    test_accel_with_covariance_to_numpy(accel_with_covariance_stamped_msg.accel, covariance)
+def test_accel_with_covariance_stamped_to_numpy(
+        accel_with_covariance_stamped_msg,
+        covariance
+        ):
+
+    test_accel_with_covariance_to_numpy(
+        accel_with_covariance_stamped_msg.accel,
+        covariance
+    )
 
 
 def test_numpy_to_accel_with_covariance(vector, accel_msg, covariance):
@@ -226,12 +237,11 @@ def test_numpy_to_accel_with_covariance(vector, accel_msg, covariance):
     assert isinstance(message.accel, Accel)
     assert message.accel == accel_msg
 
-    assert array_equal(np.array(message.covariance).reshape(6,6), covariance)
+    assert array_equal(np.array(message.covariance).reshape(6, 6), covariance)
 
 
-##
-## TwistWithCovariance, TwistWithCovarianceStamped
-##
+# TwistWithCovariance, TwistWithCovarianceStamped
+
 
 def test_twist_with_covariance_to_numpy(twist_with_covariance_msg, covariance):
     linear, _, covariance_ = to_numpy(twist_with_covariance_msg)
@@ -240,8 +250,15 @@ def test_twist_with_covariance_to_numpy(twist_with_covariance_msg, covariance):
     assert array_equal(covariance, covariance_)
 
 
-def test_twist_with_covariance_stamped_to_numpy(twist_with_covariance_stamped_msg, covariance):
-    test_twist_with_covariance_to_numpy(twist_with_covariance_stamped_msg.twist, covariance)
+def test_twist_with_covariance_stamped_to_numpy(
+        twist_with_covariance_stamped_msg,
+        covariance
+        ):
+
+    test_twist_with_covariance_to_numpy(
+        twist_with_covariance_stamped_msg.twist,
+        covariance
+    )
 
 
 def test_numpy_to_twist_with_covariance(vector, twist_msg, covariance):
@@ -252,12 +269,11 @@ def test_numpy_to_twist_with_covariance(vector, twist_msg, covariance):
     assert isinstance(message.twist, Twist)
     assert message.twist == twist_msg
 
-    assert array_equal(np.array(message.covariance).reshape(6,6), covariance)
+    assert array_equal(np.array(message.covariance).reshape(6, 6), covariance)
 
 
-##
-## Inertia, InertiaStamped
-##
+# Inertia, InertiaStamped
+
 
 def test_inertia_to_numpy(inertia_msg, vector, inertia_tensor):
     mass, mass_center, inertia_tensor_ = to_numpy(inertia_msg)
@@ -268,16 +284,18 @@ def test_inertia_to_numpy(inertia_msg, vector, inertia_tensor):
 
 
 def test_inertia_to_numpy_hom(inertia_msg, vector_hom, inertia_tensor):
-    mass, mass_center, inertia_tensor_ = to_numpy(inertia_msg, homogeneous=True)
+    mass, mass_center, inertia_tensor_ = to_numpy(
+        inertia_msg,
+        homogeneous=True
+    )
 
     assert mass == 0.0 and isinstance(mass, float)
     assert array_equal(mass_center, vector_hom)
     assert array_equal(inertia_tensor_, inertia_tensor)
-    
 
-##
-## Quaternion
-##
+
+# Quaternion
+
 
 def test_quaternion_to_numpy():
     message = Quaternion(x=1.0, y=0.0, z=0.0, w=0.0)
@@ -287,9 +305,7 @@ def test_quaternion_to_numpy():
     assert as_array == np.quaternion(1.0, 0.0, 0.0, 0.0)
 
 
-##
-## Vector3, Vector3Stamped
-##
+# Vector3, Vector3Stamped
 
 
 def test_numpy_to_vector(vector, vector3_msg):
@@ -317,7 +333,7 @@ def test_numpy_to_vector_invalid_types():
     with pytest.raises(TypeError):
         to_message(Vector3, array)
 
-    
+
 def test_numpy_to_vector_invalid_dtype():
 
     # 2 ** 24 + 1 is representable as a float64, but not float32

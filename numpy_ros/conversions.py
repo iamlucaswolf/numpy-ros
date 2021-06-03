@@ -4,14 +4,14 @@
 
 
 from genpy.message import Message
-import numpy as np
 
-# Maps ROS message types (i.e. types inheriting from genpy.message.Message) 
-# to handlers that convert 
+# Maps ROS message types (i.e. types inheriting from genpy.message.Message)
+# to handlers that convert
 _to_numpy = {}
 _to_message = {}
 
 # TODO Synthesize docstring to contain individual conversion info
+
 
 def to_numpy(message: Message, *args, **kwargs):
     """Converts a ROS message into a NumPy representation."""
@@ -54,7 +54,7 @@ def converts_to_numpy(*args):
                 raise TypeError()
 
             _to_numpy[message_type] = function
-        
+
         return function
 
     return decorator
@@ -71,7 +71,7 @@ def converts_to_message(*args):
                 raise TypeError()
 
             _to_message[message_type] = function
-        
+
         return function
 
     return decorator
