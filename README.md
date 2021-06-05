@@ -1,6 +1,4 @@
-![numpy-ros logo](media/logo.png)
-
-# numpy-ros
+# <img alt="numpy-ros" src="media/logo.png" >
 
 Seamlessly convert between ROS messages and NumPy arrays. Installable via your 
 favorite Python dependency management system (pip, poetry, pipenv, ...) &ndash; 
