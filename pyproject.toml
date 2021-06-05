@@ -3,7 +3,14 @@ name = "numpy-ros"
 version = "0.1.0"
 description = "Seamlessly convert between ROS messages and NumPy arrays."
 authors = ["Lucas Wolf <iamlucaswolf@gmail.com>"]
+keywords = ["numpy", "ros"]
+readme = "README.md"
 license = "MIT"
+homepage = "https://github.com/iamlucaswolf/numpy-ros"
+repository = "https://github.com/iamlucaswolf/numpy-ros"
+include = [
+    "LICENSE",
+]
 
 [tool.poetry.dependencies]
 python = "^3.6, <3.10"
@@ -21,3 +28,6 @@ flake8 = "^3.9.2"
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.extras]
+quaternion-extras = ["numba", "scipy"]

@@ -38,7 +38,7 @@ consider installing with the optional scipy and numba dependencies. For more
 information, see the numpy-quaternion documentation.
 
 ```bash
-$ pip install 'numpy-ros[scipy,numba]'
+$ pip install 'numpy-ros[quaternion-extras]'
 ```
 
 Support for installation via conda is targeted for future releases.
