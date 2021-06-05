@@ -17,7 +17,7 @@ no matter what ROS version you're on.
 
 # Installation
 
-numpy-ros is distributed via PyPI. To install, run:
+numpy-ros is distributed via PyPI for Python 3.6 and higher. To install, run:
 
 ```bash
 # pip
@@ -28,6 +28,17 @@ $ poetry add numpy-ros
 
 # pipenv
 $ pipenv install numpy-ros
+```
+
+ROS messages of type `Quaternion` are by default converted into numpy arrays of
+type `np.quaternion`, which are provided by the 
+[numpy-quaternion](https://github.com/moble/quaternion) package. To make use
+of hardware acceleration and certain advanced features of numpy-quaternion,
+consider installing with the optional scipy and numba dependencies. For more 
+information, see the numpy-quaternion documentation.
+
+```bash
+$ pip install 'numpy-ros[scipy,numba]'
 ```
 
 Support for installation via conda is targeted for future releases.
