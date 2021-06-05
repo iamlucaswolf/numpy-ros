@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 
-"""Functions for registring and dispatching conversion handlers."""
+"""Registration and dispatching of conversion handlers."""
 
+# TODO documentation
 
 from genpy.message import Message
 
-# Maps ROS message types (i.e. types inheriting from genpy.message.Message)
-# to handlers that convert
 _to_numpy = {}
 _to_message = {}
-
-# TODO Synthesize docstring to contain individual conversion info
 
 
 def to_numpy(message: Message, *args, **kwargs):
@@ -21,7 +18,7 @@ def to_numpy(message: Message, *args, **kwargs):
     if not convert:
         raise TypeError(
             (f'Cannot convert unknown message type {message.__class__}. '
-             f'To register a custom conversion function, see the '
+             f'To register a custom conversion handler, see the '
              f'`converts_to_numpy` decorator')
         )
 
@@ -36,7 +33,7 @@ def to_message(message_type, *args, **kwargs):
     if not convert:
         raise ValueError(
             (f'Cannot convert to unknown message type {message_type}. To '
-             f'register a custom conversion function, see the '
+             f'register a custom conversion handler, see the '
              f'`converts_to_message` decorator')
         )
 
@@ -44,7 +41,7 @@ def to_message(message_type, *args, **kwargs):
 
 
 def converts_to_numpy(*args):
-    """Decorator to register a custom Message-to-NumPy conversion function."""
+    """Decorator to register a custom Message-to-NumPy handler."""
 
     def decorator(function):
 
@@ -61,7 +58,7 @@ def converts_to_numpy(*args):
 
 
 def converts_to_message(*args):
-    """Decorator to register a custom NumPy-to-Message conversion function."""
+    """Decorator to register a custom NumPy-to-Message handler."""
 
     def decorator(function):
 

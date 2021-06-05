@@ -2,19 +2,21 @@
 
 """Conversion handlers for the ROS geometry_msgs package."""
 
+# TODO documentation
+
 import collections
 import warnings
 
 import numpy as np
 
-# numpy-quaternion warns if numba or scipy are not installed. We add these as
-# extra dependencies to the project.
+# numpy-quaternion warns if numba or scipy are not installed
+# TODO what is the best way to deal with this?
 with warnings.catch_warnings():
     warnings.simplefilter('ignore')
     import quaternion
 
 from numpy_ros.conversions import (
-    converts_to_numpy, converts_to_message, to_message, to_numpy
+    converts_to_numpy, converts_to_message, to_message
 )
 
 try:
@@ -61,7 +63,7 @@ def _unstamp(message):
 
 
 def _assert_is_castable(array, dtype):
-    """Raises a TypeError if `array` cannot be converted to `dtype` without
+    """Raises a TypeError if `array` cannot be casted to `dtype` without
     loss of precision."""
 
     min_dtype = np.min_scalar_type(array)
@@ -400,9 +402,9 @@ def numpy_to_frame_with_covariance(message_type, pose, covariance):
 
 
 @converts_to_numpy(PoseArray)
-def pose_array_to_numpy(message, as_array=False):
+def pose_array_to_numpy(message, homogeneous=False, as_array=False):
 
-    result = [frame_to_numpy(pose) for pose in message.poses]
+    result = [frame_to_numpy(pose, homogeneous=homogeneous) for pose in message.poses]
 
     if as_array:
         result = np.stack(result, axis=0)
