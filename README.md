@@ -103,33 +103,33 @@ Currently, numpy-ros provides conversions of the message types listed below. Mor
 | Message Type                 | `to_numpy` | `from_numpy` | `kwargs`                         |
 |------------------------------|:----------:|:------------:|----------------------------------|
 | `Accel`                      | ✅         | ✅           | `homogeneous` (default: `False`) |
-| `AccelStamped`               | ✅         |              | `homogeneous` (default: `False`) |
+| `AccelStamped`               | ✅         | N/A          | `homogeneous` (default: `False`) |
 | `AccelWithCovariance`        | ✅         | ✅           | `homogeneous` (default: `False`) |
-| `AccelWithCovarianceStamped` | ✅         |              | `homogeneous` (default: `False`) |
+| `AccelWithCovarianceStamped` | ✅         | N/A          | `homogeneous` (default: `False`) |
 | `Inertia`                    | ✅         | ✅           | `homogeneous` (default: `False`) |
-| `InertiaStamped`             | ✅         |              | `homogeneous` (default: `False`) |
+| `InertiaStamped`             | ✅         | N/A          | `homogeneous` (default: `False`) |
 | `Point`                      | ✅         | ✅           | `homogeneous` (default: `False`) |
 | `Point32`                    | ✅         | ✅           | `homogeneous` (default: `False`) |
-| `PointStamped`               | ✅         |              | `homogeneous` (default: `False`) |
+| `PointStamped`               | ✅         | N/A          | `homogeneous` (default: `False`) |
 | `Polygon`                    | ✅         | ✅           | `homogeneous` (default: `False`) |
-| `PolygonStamped`             | ✅         |              | `homogeneous` (default: `False`) |
+| `PolygonStamped`             | ✅         | N/A          | `homogeneous` (default: `False`) |
 | `Pose`                       | ✅         | ✅           | `homogeneous` (default: `False`) |
 | `PoseArray`                  | ✅         | ✅           | `homogeneous` (default: `False`)<br>`as_array` (default: `False`) |
-| `PoseStamped`                | ✅         |              | `homogeneous` (default: `False`) |
+| `PoseStamped`                | ✅         | N/A          | `homogeneous` (default: `False`) |
 | `PoseWithCovariance`         | ✅         | ✅           | `homogeneous` (default: `False`) |
-| `PoseWithCovarianceStamped`  | ✅         |              | `homogeneous` (default: `False`) |
+| `PoseWithCovarianceStamped`  | ✅         | N/A          | `homogeneous` (default: `False`) |
 | `Quaternion`                 | ✅         | ✅           |
-| `QuaternionStamped`          | ✅         |              |
+| `QuaternionStamped`          | ✅         | N/A          |
 | `Transform`                  | ✅         | ✅           | `homogeneous` (default: `False`) |
-| `TransformStamped`           | ✅         |              | `homogeneous` (default: `False`) |
+| `TransformStamped`           | ✅         | N/A          | `homogeneous` (default: `False`) |
 | `Twist`                      | ✅         | ✅           | `homogeneous` (default: `False`) |
-| `TwistStamped`               | ✅         |              | `homogeneous` (default: `False`) |
+| `TwistStamped`               | ✅         | N/A          | `homogeneous` (default: `False`) |
 | `TwistWithCovariance`        | ✅         | ✅           | `homogeneous` (default: `False`) |
-| `TwistWithCovarianceStamped` | ✅         |              | `homogeneous` (default: `False`) |
+| `TwistWithCovarianceStamped` | ✅         | N/A          | `homogeneous` (default: `False`) |
 | `Vector3`                    | ✅         | ✅           | `homogeneous` (default: `False`) |
-| `Vector3Stamped`             | ✅         |              | `homogeneous` (default: `False`) |
+| `Vector3Stamped`             | ✅         | N/A          | `homogeneous` (default: `False`) |
 | `Wrench`                     | ✅         | ✅           | `homogeneous` (default: `False`) |
-| `WrenchStamped`              | ✅         |              | `homogeneous` (default: `False`) |
+| `WrenchStamped`              | ✅         | N/A          | `homogeneous` (default: `False`) |
 
 
 More message types will be added in future versions.
