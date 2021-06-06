@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "numpy-ros"
-version = "0.1.1"
+version = "0.1.2"
 description = "Seamlessly convert between ROS messages and NumPy arrays."
 authors = ["Lucas Wolf <iamlucaswolf@gmail.com>"]
 keywords = ["numpy", "ros"]

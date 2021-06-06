@@ -338,7 +338,7 @@ def frame_to_numpy(message, homogeneous=False):
     return position, rotation
 
 
-@converts_to_message(Pose, PoseStamped, Transform, TransformStamped)
+@converts_to_message(Pose, Transform)
 def numpy_to_frame(message_type, *args):
 
     is_pose = message_type is Pose
@@ -370,8 +370,8 @@ def numpy_to_frame(message_type, *args):
         )
 
     kwargs = {
-        position_key: numpy_to_vector(position),
-        rotation_key: numpy_to_quaternion(rotation)
+        position_key: numpy_to_vector(Vector3, position),
+        rotation_key: numpy_to_quaternion(Quaternion, rotation)
     }
 
     return message_type(**kwargs)

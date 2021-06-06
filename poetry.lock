@@ -259,10 +259,13 @@ python-versions = ">=3.6"
 docs = ["sphinx", "jaraco.packaging (>=8.2)", "rst.linker (>=1.9)"]
 testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pytest-cov", "pytest-enabler", "jaraco.itertools", "func-timeout", "pytest-black (>=0.3.7)", "pytest-mypy"]
 
+[extras]
+quaternion-extras = ["numba", "scipy"]
+
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6, <3.10"
-content-hash = "c3becfccc2952beeb8a253626fbc4a1e6335d0655e1d3f974392613e69fb5381"
+content-hash = "0c9319370008a9a64476eaab3157a93a3f872fb4a5bcdcd4e93a834eeaba4664"
 
 [metadata.files]
 atomicwrites = [
