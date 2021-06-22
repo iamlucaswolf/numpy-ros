@@ -298,7 +298,7 @@ def test_inertia_to_numpy_hom(inertia_msg, vector_hom, inertia_tensor):
 
 
 def test_quaternion_to_numpy():
-    message = Quaternion(x=1.0, y=0.0, z=0.0, w=0.0)
+    message = Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)
     as_array = to_numpy(message)
 
     assert as_array.dtype == np.quaternion

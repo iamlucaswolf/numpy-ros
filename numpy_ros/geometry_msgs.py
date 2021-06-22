@@ -62,7 +62,7 @@ def _unstamp(message):
     return message
 
 
-def _assert_is_castable(array, dtype):
+def cast_to_dtype(array, dtype):
     """Raises a TypeError if `array` cannot be casted to `dtype` without
     loss of precision."""
 
@@ -70,6 +70,8 @@ def _assert_is_castable(array, dtype):
 
     if not np.can_cast(min_dtype, dtype):
         raise TypeError(f'Cannot safely cast array {array} to dtype {dtype}.')
+
+    return array.astype(dtype)
 
 
 def _assert_has_shape(array, *shapes):
@@ -85,7 +87,6 @@ def _assert_has_shape(array, *shapes):
 
 @converts_to_numpy(Vector3, Vector3Stamped, Point, PointStamped, Point32)
 def vector_to_numpy(message, homogeneous=False):
-    """Converts 3d vector mesage types to a flat array."""
 
     message = _unstamp(message)
 
@@ -102,12 +103,11 @@ def vector_to_numpy(message, homogeneous=False):
 
 @converts_to_message(Vector3, Point, Point32)
 def numpy_to_vector(message_type, array):
-    """Converts a 3d vector representation to a ROS message"""
 
     dtype = np.float32 if message_type is Point32 else np.float64
+    array = cast_to_dtype(array, dtype)
 
     _assert_has_shape(array, (3,), (4,))
-    _assert_is_castable(array, dtype)
 
     if len(array) == 4 and not np.isclose(array[3], 1.0):
         raise ValueError(
@@ -210,7 +210,7 @@ def numpy_to_kinematics_with_covariance(
 
 def numpy_to_covariance(array):
 
-    _assert_is_castable(array, np.float64)
+    array = cast_to_dtype(array, np.float64)
     _assert_has_shape(array, (6, 6))
 
     return tuple(array.flatten())
@@ -235,16 +235,10 @@ def inertia_to_numpy(message, homogeneous=False):
 @converts_to_message(Inertia)
 def numpy_to_inertia(message_type, mass, mass_center, inertia_tensor):
 
-    _assert_is_castable(mass, np.float64)
-    _assert_is_castable(inertia_tensor, np.float64)
+    _assert_has_shape(inertia_tensor, (3, 3))
+    inertia_tensor = cast_to_dtype(inertia_tensor, np.float64)
 
     mass_center_message = numpy_to_vector(Vector3, mass_center)
-
-    if inertia_tensor.shape != (3, 3):
-        raise ValueError(
-            (f'Expected inertia tensor of shape (6,6), received '
-             f'{inertia_tensor.shape}.')
-        )
 
     return message_type(
         m=float(mass),
@@ -274,8 +268,7 @@ def polygon_to_numpy(message, homogeneous=False):
 @converts_to_message(Polygon)
 def numpy_to_polygon(message_type, points):
 
-    _assert_is_castable(points, np.float32)
-
+    # TODO extend _assert_shape to accept np.newaxis
     if points.ndim != 2 or len(points) not in (3, 4):
         raise ValueError(
             (f'Expected matrix of shape (3, *) or (4, *), received '
@@ -294,24 +287,34 @@ def numpy_to_polygon(message_type, points):
 @converts_to_numpy(Quaternion, QuaternionStamped)
 def quaternion_to_numpy(message):
 
+    # TODO add to documentation
+    # NOTE: In ROS, the 'w' component of a unit quaternion comes last whereas
+    # in np.quaternion, 'w' comes first
+
     message = _unstamp(message)
-    return np.quaternion(message.x, message.y, message.z, message.w)
+    return np.quaternion(message.w, message.x, message.y, message.z)
 
 
 @converts_to_message(Quaternion)
 def numpy_to_quaternion(message_type, numpy_obj):
 
+    # TODO add to documentation
+    # NOTE: We assume inputs to follow the np.quaternion convention (i.e.
+    # 'w' comes first)
+
     if isinstance(numpy_obj, quaternion.quaternion):
-        return message_type(*quaternion.as_float_array(numpy_obj))
+        numpy_obj = quaternion.as_float_array(numpy_obj)
 
-    _assert_is_castable(numpy_obj, np.float64)
+    else:
+        numpy_obj = cast_to_dtype(numpy_obj, np.float64)
+        _assert_has_shape(numpy_obj, (4,))
 
-    if numpy_obj.shape != (4,):
-        raise ValueError(
-            f'Expected array of shape (4,), received {numpy_obj.shape}.'
-        )
-
-    return message_type(*(float(x) for x in numpy_obj))
+    return message_type(
+        x=numpy_obj[1],
+        y=numpy_obj[2],
+        z=numpy_obj[3],
+        w=numpy_obj[0],
+    )
 
 
 @converts_to_numpy(Pose, PoseStamped, Transform, TransformStamped)
@@ -348,15 +351,13 @@ def numpy_to_frame(message_type, *args):
 
     if len(args) == 1:
 
-        matrix = args[0]
-
-        _assert_is_castable(matrix, Pose)
+        matrix = cast_to_dtype(args[0], np.float64)
         _assert_has_shape(matrix, (4, 4))
 
-        if not matrix[3, :] == np.array([0.0, 0.0, 0.0, 1.0]):
+        if not np.allclose(matrix[3, :], np.array([0.0, 0.0, 0.0, 1.0])):
             raise ValueError(f'{matrix} is not a homogeneous matrix.')
 
-        position = matrix[3, :]
+        position = matrix[:3, 3]
         rotation = quaternion.from_rotation_matrix(matrix[:3, :3])
 
     elif len(args) == 2:
@@ -404,7 +405,9 @@ def numpy_to_frame_with_covariance(message_type, pose, covariance):
 @converts_to_numpy(PoseArray)
 def pose_array_to_numpy(message, homogeneous=False, as_array=False):
 
-    result = [frame_to_numpy(pose, homogeneous=homogeneous) for pose in message.poses]
+    result = [
+        frame_to_numpy(pose, homogeneous=homogeneous) for pose in message.poses
+    ]
 
     if as_array:
         result = np.stack(result, axis=0)
@@ -417,6 +420,7 @@ def numpy_to_pose_array(message_type, numpy_obj):
 
     if isinstance(numpy_obj, np.ndarray):
 
+        # TODO extend _assert_shape to accept np.newaxis
         if numpy_obj.ndim != 3 or numpy_obj.shape[1:] not in (3, 4):
             raise ValueError(
                 (f'Expected array of shape (*, 3, 3) or (*, 4, 4), received '
